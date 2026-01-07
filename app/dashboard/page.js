@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
@@ -11,17 +9,29 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  // Add logging for debugging
+  console.log("📊 Dashboard - Status:", status);
+  console.log("📊 Dashboard - Session:", session ? "exists" : "null");
+
   useEffect(() => {
+    console.log("🔄 Dashboard useEffect - Status:", status);
+    
     if (status === "unauthenticated") {
+      console.log("❌ Unauthenticated - Redirecting to login");
       router.push("/");
+    } else if (status === "authenticated") {
+      console.log("✅ Authenticated - User:", session?.user?.email || session?.user?.name);
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   const handleLogout = () => {
+    console.log("👋 Logging out...");
     signOut({ callbackUrl: "/" });
   };
 
+  // Loading state
   if (status === "loading") {
+    console.log("⏳ Loading session...");
     return (
       <main className="flex items-center justify-center min-h-screen">
         <div className="relative">
@@ -32,9 +42,21 @@ export default function Dashboard() {
     );
   }
 
-  if (!session) {
-    return null;
+  // Not authenticated - show loading while redirecting
+  if (status === "unauthenticated" || !session) {
+    console.log("🔒 No session - Showing loading during redirect");
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-indigo-200/20 border-t-indigo-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 w-16 h-16 border-4 border-violet-200/20 border-t-violet-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+        </div>
+      </main>
+    );
   }
+
+  // Authenticated - render dashboard
+  console.log("✅ Rendering dashboard");
 
   return (
     <main className="min-h-screen p-4 md:p-6 lg:p-8 relative overflow-hidden">
