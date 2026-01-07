@@ -1,15 +1,21 @@
-// middleware.js
 import { withAuth } from "next-auth/middleware";
 
-// Protect /dashboard and all subpaths
 export default withAuth({
-  // Pages that require authentication
+  callbacks: {
+    authorized({ req, token }) {
+      // Log for debugging
+      console.log("🔐 Middleware - Checking auth for:", req.nextUrl.pathname);
+      console.log("Token exists:", !!token);
+      
+      // If token exists, user is authenticated
+      return !!token;
+    },
+  },
   pages: {
-    signIn: "/", // Redirect to home or login page if not signed in
+    signIn: "/",
   },
 });
 
-// Apply middleware only to dashboard routes
 export const config = {
   matcher: ["/dashboard/:path*"],
 };
