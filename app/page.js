@@ -91,11 +91,11 @@ export default function Home() {
           </div>
 
           {/* Footer */}
-          <div className="pt-6 border-t border-slate-700/50">
-            <p className="text-center text-sm text-slate-500">
-              Secure authentication powered by NextAuth
-            </p>
-          </div>
+          // <div className="pt-6 border-t border-slate-700/50">
+          //   <p className="text-center text-sm text-slate-500">
+          //     Secure authentication powered by NextAuth
+          //   </p>
+          // </div>
         </div>
       </div>
     </main>
