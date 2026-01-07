@@ -2,15 +2,14 @@ import NextAuth from "next-auth";
 import FacebookProvider from "next-auth/providers/facebook";
 import TwitterProvider from "next-auth/providers/twitter";
 
-// Environment check
 console.log("═══════════════════════════════════════");
 console.log("🔧 NextAuth Configuration Loading...");
 console.log("═══════════════════════════════════════");
 console.log("NEXTAUTH_SECRET:", process.env.NEXTAUTH_SECRET ? "✅ EXISTS" : "❌ MISSING");
 console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("");
 
-// Build providers
 const providers = [];
 
 if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
@@ -33,44 +32,52 @@ if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET) {
 console.log(`\n📊 Total providers: ${providers.length}`);
 console.log("═══════════════════════════════════════\n");
 
+const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith("https://");
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
+
+console.log("🍪 Cookie config:");
+console.log("   Secure cookies:", useSecureCookies);
+console.log("   Cookie prefix:", cookiePrefix || "(none)");
+console.log("");
+
 export const authOptions = {
   providers,
   
-  // ✅ ADD THIS - Critical for production HTTPS
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+  },
+  
+  useSecureCookies,
+  
   cookies: {
     sessionToken: {
-      name: `__Secure-next-auth.session-token`,
+      name: `${cookiePrefix}next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true, // Required for HTTPS (Vercel)
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
       },
     },
     callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
+      name: `${cookiePrefix}next-auth.callback-url`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
       },
     },
     csrfToken: {
-      name: `__Host-next-auth.csrf-token`,
+      name: `${useSecureCookies ? "__Host-" : ""}next-auth.csrf-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
       },
     },
-  },
-  
-  // ✅ ADD THIS - Explicitly set session strategy
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   
   pages: {
@@ -99,13 +106,21 @@ export const authOptions = {
       console.log("URL param:", url);
       console.log("Base URL:", baseUrl);
       
-      const redirectTo = url.startsWith(baseUrl) 
-        ? `${baseUrl}/dashboard` 
-        : `${baseUrl}/dashboard`;
+      // Always redirect to dashboard after sign in
+      if (url.startsWith("/")) {
+        const redirectTo = `${baseUrl}${url}`;
+        console.log("📍 Redirecting to:", redirectTo);
+        return redirectTo;
+      }
       
-      console.log("📍 Redirecting to:", redirectTo);
-      console.log("");
-      return redirectTo;
+      if (url.startsWith(baseUrl)) {
+        console.log("📍 Redirecting to:", url);
+        return url;
+      }
+      
+      const dashboardUrl = `${baseUrl}/dashboard`;
+      console.log("📍 Redirecting to:", dashboardUrl);
+      return dashboardUrl;
     },
 
     async jwt({ token, user, account }) {
@@ -127,7 +142,7 @@ export const authOptions = {
         token.id = user.id;
       }
       
-      console.log("🎫 Token created with keys:", Object.keys(token).join(", "));
+      console.log("🎫 Token keys:", Object.keys(token).join(", "));
       console.log("");
       return token;
     },
@@ -138,14 +153,14 @@ export const authOptions = {
       console.log("└─────────────────────────────────────┘");
       
       if (token) {
-        console.log("Token present - adding to session");
+        console.log("Token present");
         console.log("   Token ID:", token.id);
         console.log("   Token sub:", token.sub);
-        session.user.id = token.id;
+        session.user.id = token.id || token.sub;
         session.provider = token.provider;
       }
       
-      console.log("✅ Session:", session.user?.email || session.user?.name);
+      console.log("✅ Session user:", session.user?.email || session.user?.name);
       console.log("");
       return session;
     },
