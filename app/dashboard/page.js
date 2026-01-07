@@ -52,37 +52,7 @@ export default function Dashboard() {
     </main>
   );
 }
-```
 
-## 🧪 How to Test
-
-### 1. Open Browser DevTools
-- Press `F12` or `Ctrl+Shift+I` (Windows/Linux)
-- Or `Cmd+Option+I` (Mac)
-- Go to **Console** tab
-
-### 2. Try to Login
-Click a social login button and watch the console
-
-### 3. Check Vercel Logs
-Go to: https://vercel.com/your-username/o-auth-lj68/deployments
-- Click latest deployment
-- Click "View Function Logs"
-
-## 🔍 What to Look For
-
-### If Authentication is Working:
-```
-✅ Sign In Event - User logged in successfully
-🔄 Redirect Callback Triggered
-✅ Redirecting to: https://o-auth-lj68.vercel.app/dashboard
-📋 Session Callback Triggered
-```
-
-### If Stuck in Loop (Common Issue):
-```
-❌ Not authenticated, redirecting to login...
-🏠 Login Page - Session Status: unauthenticated
 
 
 // "use client";
